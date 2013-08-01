@@ -43,124 +43,149 @@ void adjust_TS_packet_header(TS_packet_header* pheader,char * buf_header)
     pheader->transport_scrambling_control    = buf_header[3] >> 6;
     pheader->adaption_field_control            = buf_header[3] >> 4 & 0x03;
     pheader->continuity_counter                = buf_header[3] & 0x0F;
-
 }
 
 
 // Adjust PAT table
-void adjust_PAT_table ( TS_PAT * packet, char * buffer )
+void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet, char * buffer )
 {
     int n = 0, i = 0;
     int len = 0;
-	buffer++;//data_byte  bit:8
-    packet->table_id                    = buffer[0];
-    packet->section_syntax_indicator    = buffer[1] >> 7;
-    packet->zero                        = buffer[1] >> 6 & 0x1;
-    packet->reserved_1                  = buffer[1] >> 4 & 0x3;
-    packet->section_length              = (buffer[1] & 0x0F) << 8 | buffer[2];
-    packet->transport_stream_id         = buffer[3] << 8 | buffer[4];
-    packet->reserved_2                    = buffer[5] >> 6;
-    packet->version_number                = buffer[5] >> 1 &  0x1F;
-    packet->current_next_indicator        = buffer[5] & 0x01;
-    packet->section_number                = buffer[6];
-    packet->last_section_number            = buffer[7];
-    //printf("buffer[6] = 0x%x, buffer[7] = 0x%x\n",buffer[6],buffer[7]);
-    //printf("buffer[8] = 0x%x, buffer[9] = 0x%x\n",buffer[8],buffer[9]);
-    //printf("buffer[10] = 0x%x, buffer[11] = 0x%x\n",buffer[10],buffer[11]);
-    //printf("buffer[12] = 0x%x, buffer[13] = 0x%x\n",buffer[12],buffer[13]);
-    // Get CRC_32
-    len = 3 + packet->section_length;
-    packet->CRC_32                        = (buffer[len-4] & 0x000000FF) << 24
-                                          | (buffer[len-3] & 0x000000FF) << 16
-                                          | (buffer[len-2] & 0x000000FF) << 8
-                                          | (buffer[len-1] & 0x000000FF);
-    // Parse network_PID or program_map_PID
-    //printf("packet->CRC_32 = 0x%x\n",packet->CRC_32);
-    //printf("len-4 = %d\n"len-4);
-    //printf("packet->section_length = %d\n",packet->section_length);
-    for ( i = 0,n = 0; n < packet->section_length - 4; n ++,i++ )
+    unsigned char adaption_field_length = 0;
+
+    if(pheader->adaption_field_control == 2 || pheader->adaption_field_control == 3)
     {
-    //    printf("#################\n");
-        packet->program_number            = buffer[8] << 8 | buffer[9];
-        packet->reserved_3                = buffer[10] >> 5;
-        if ( packet->program_number == 0x0 )
-            packet->network_PID = (buffer[10] << 3) << 5 | buffer[11];
-        else
+    	adaption_field_length = buffer[0];
+    	len = adaption_field_length + 1;
+    }
+    if(pheader->adaption_field_control == 1 || pheader->adaption_field_control == 3)
+    {
+    	len++;
+
+        packet->table_id                    = buffer[len + 0];
+        packet->section_syntax_indicator    = buffer[len + 1] >> 7;
+        packet->zero                        = buffer[len + 1] >> 6 & 0x1;
+        packet->reserved_1                  = buffer[len + 1] >> 4 & 0x3;
+        packet->section_length              = (buffer[len + 1] & 0x0F) << 8 | (buffer[len + 2] & 0xFF);
+//        printf("packet->section_length = %d\n",(buffer[len + 1] & 0x0F) << 8 | (buffer[len + 2] & 0xFF));
+        packet->transport_stream_id         = buffer[len + 3] << 8 | buffer[len + 4];
+        packet->reserved_2                    = buffer[len + 5] >> 6;
+        packet->version_number                = buffer[len + 5] >> 1 &  0x1F;
+        packet->current_next_indicator        = buffer[len + 5] & 0x01;
+        packet->section_number                = buffer[len + 6];
+        packet->last_section_number            = buffer[len + 7];
+
+        // Get CRC_32
+//        len = 3 + packet->section_length;
+
+        packet->CRC_32                        = (buffer[len-4] & 0xFF) << 24
+                                              | (buffer[len-3] & 0xFF) << 16
+                                              | (buffer[len-2] & 0xFF) << 8
+                                              | (buffer[len-1] & 0xFF);
+
+        // Parse network_PID or program_map_PID
+        //printf("packet->CRC_32 = 0x%x\n",packet->CRC_32);
+        //printf("len-4 = %d\n"len-4);
+        //printf("packet->section_length = %d\n",packet->section_length);
+
+        //len = 3+ 1 + packet->section_length - 4;
+        len += 8;
+
+        for ( i = 5,n = len; i < packet->section_length; n+=8,i+=8 )
         {
-            packet->program_map_PID = (buffer[10] << 3) << 5 | buffer[11];
-        //    printf("packet->program_map_PID = %x\n",packet->program_map_PID);
+        //    printf("@@@@@@###############\n");
+            packet->program_number            = (buffer[n] & 0xFF) << 8 | (buffer[n+1] & 0xFF);
+            packet->reserved_3                = buffer[n+2] >> 5;
+            if ( packet->program_number == 0x0 )
+            {
+                packet->network_PID = (buffer[n +2] & 0x1F) << 8 | (buffer[n +3] & 0xFF);
+			//	printf("packet->network_PID = %x\n",packet->network_PID);
+            }
+            else
+            {
+            	packet->program_map_PID = (buffer[n +2] & 0x1F) << 8 | (buffer[n +3] & 0xFF);
+            //    printf("packet->program_map_PID = %x\n",packet->program_map_PID);
+            //    printf("packet->program_map_PID = %d\n",packet->program_map_PID);
+            }
         }
-        n += 5;
+    }
+    if(packet->program_map_PID == 0)
+    {
+    	printf("can't find program_map_PID !\n");
     }
 }
 
 
 
 // Adjust PMT table
-void adjust_PMT_table ( TS_PMT * packet, char * buffer )
+void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet, char * buffer )
 {
     int pos = 12, len = 0;
     int i = 0;
-	buffer++;
-    packet->table_id                            = buffer[0];
-    packet->section_syntax_indicator            = buffer[1] >> 7;
-    packet->zero                                = buffer[1] >> 6 & 0x1;
-    packet->reserved_1                            = buffer[1] >> 4 & 0x3;
-    packet->section_length                        = (buffer[1] & 0x0F) << 8 | buffer[2];
-    packet->program_number                        = buffer[3] << 8 | buffer[4];
-    packet->reserved_2                            = buffer[5] >> 6;
-    packet->version_number                        = buffer[5] >> 1 & 0x1F;
-    packet->current_next_indicator                = buffer[5] & 0x01;
-    packet->section_number                        = buffer[6];
-    packet->last_section_number                    = buffer[7];
-    packet->reserved_3                            = buffer[8] >> 5;
-    packet->PCR_PID                                = ((buffer[8] << 8) | buffer[9]) & 0x1FFF;
-    packet->reserved_4                            = buffer[10] >> 4;
-    packet->program_info_length                    = (buffer[10] & 0x0F) << 8 | buffer[11];
-    // Get CRC_32
-    len = packet->section_length + 3;
-    packet->CRC_32                = (buffer[len-4] & 0x000000FF) << 24
-                                  | (buffer[len-3] & 0x000000FF) << 16
-                                  | (buffer[len-2] & 0x000000FF) << 8
-                                  | (buffer[len-1] & 0x000000FF);
-    // program info descriptor
-    //printf("packet->program_info_length = %d\n",packet->program_info_length);
-    //printf("packet->section_length = %d\n",packet->section_length);
-    //printf("pos = %d\n",pos);
-    if ( packet->program_info_length != 0 )
-        pos += packet->program_info_length;
+    unsigned char adaption_field_length = 0;
 
-    //printf("pos = %d\n",pos);
-    // Get stream type and PID
-    for ( ; pos <= (packet->section_length + 2 ) -  4; )
+    if(pheader->adaption_field_control == 2 || pheader->adaption_field_control == 3)
     {
-        packet->stream_type                            = buffer[pos];
-    //    printf("packet->stream_type = %d\n",packet->stream_type);
-        packet->reserved_5                            = buffer[pos+1] >> 5;
-        packet->elementary_PID                        = ((buffer[pos+1] << 8) | buffer[pos+2]) & 0x1FFF;
-    //    printf("packet->elementary_PID = %d\n",packet->elementary_PID);
-        packet->reserved_6                            = buffer[pos+3] >> 4;
-        packet->ES_info_length                        = (buffer[pos+3] & 0x0F) << 8 | buffer[pos+4];
-        // Store in es
-     //   es[i].type = packet->stream_type;
-     //   es[i].pid = packet->elementary_PID;
-        if(packet->stream_type == 15)
-            ptsdemux->audio_pid = packet->elementary_PID;
-        if(packet->stream_type == 27)
-            ptsdemux->video_pid = packet->elementary_PID;
+    	adaption_field_length = buffer[0];
+    	len = adaption_field_length + 1;
+    }
+    if(pheader->adaption_field_control == 1 || pheader->adaption_field_control == 3)
+    {
+    	len++;
+        packet->table_id                            = buffer[len + 0];
+        packet->section_syntax_indicator            = buffer[len + 1] >> 7;
+        packet->zero                                = buffer[len + 1] >> 6 & 0x1;
+        packet->reserved_1                            = buffer[len + 1] >> 4 & 0x3;
+        packet->section_length                        = (buffer[len + 1] & 0x0F) << 8 | buffer[len + 2];
+//        printf("PMT packet->section_length = %d\n",packet->section_length);
+        packet->program_number                        = buffer[len + 3] << 8 | buffer[len + 4];
+        packet->reserved_2                            = buffer[len + 5] >> 6;
+        packet->version_number                        = buffer[len + 5] >> 1 & 0x1F;
+        packet->current_next_indicator                = buffer[len + 5] & 0x01;
+        packet->section_number                        = buffer[len + 6];
+        packet->last_section_number                    = buffer[len + 7];
+        packet->reserved_3                            = buffer[len + 8] >> 5;
+        packet->PCR_PID                                = ((buffer[len + 8] << 8) | buffer[len + 9]) & 0x1FFF;
+        packet->reserved_4                            = buffer[len + 10] >> 4;
+        packet->program_info_length                    = (buffer[len + 10] & 0x0F) << 8 | (buffer[len + 11] & 0xFF);
+        // Get CRC_32
 
+        //len = packet->section_length + 3;
+        packet->CRC_32                = (buffer[len-4] & 0x000000FF) << 24
+                                      | (buffer[len-3] & 0x000000FF) << 16
+                                      | (buffer[len-2] & 0x000000FF) << 8
+                                      | (buffer[len-1] & 0x000000FF);
+        // program info descriptor
+        //printf("packet->program_info_length = %d\n",packet->program_info_length);
+        //printf("packet->section_length = %d\n",packet->section_length);
+        //printf("pos = %d\n",pos);
+        if ( packet->program_info_length != 0 )
+            len += packet->program_info_length;
 
-
-        if ( packet->ES_info_length != 0 )
+//        printf("pos = %d\n",pos);
+        // Get stream type and PID
+        for (i = 0, pos = len + 12 ; i < packet->section_length - 3 ; pos+=5,i+=5)
         {
-            pos = pos+5;
-            pos += packet->ES_info_length;
+//        	printf("########################\n");
+            packet->stream_type                            = buffer[pos];
+//            printf("packet->stream_type = %d\n",packet->stream_type);
+            packet->reserved_5                            = buffer[pos+1] >> 5;
+            packet->elementary_PID                        = ((buffer[pos+1] << 8) | buffer[pos+2]) & 0x1FFF;
+//            printf("packet->elementary_PID = %d\n",packet->elementary_PID);
+            packet->reserved_6                            = buffer[pos+3] >> 4;
+            packet->ES_info_length                        = (buffer[pos+3] & 0x0F) << 8 | buffer[pos+4];
+
+            if(packet->stream_type == 15)    //aac
+                ptsdemux->audio_pid = packet->elementary_PID;
+            if(packet->stream_type == 27)    //h264
+                ptsdemux->video_pid = packet->elementary_PID;
+
+            if ( packet->ES_info_length != 0 )
+            {
+                pos += packet->ES_info_length;
+                i += packet->ES_info_length;
+            }
         }
-        else
-        {
-            pos += 5;
-        }
-        i++;
     }
 }
 

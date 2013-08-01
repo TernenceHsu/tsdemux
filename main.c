@@ -81,29 +81,22 @@ int main(int argc,char * argv[])
     TS_PAT * packet_pat =  malloc(sizeof(TS_PAT));
     TS_PMT * packet_pmt =  malloc(sizeof(TS_PMT));
 
-//    for(i = 0;i < 300;i++)
+//    for(i = 0;i < 3;i++)
     while(1)
     {
-    //    i++;
         if(fread(buffer_ts_header,4,1,fp_sourcefile) != 1) {
         	printf("read inputfile ts_head error !\n");
+        	break;
         }
         adjust_TS_packet_header(packet_head,buffer_ts_header);
 
-        ret2 = fread(pat,184,1,fp_sourcefile);
-        if(ret1 != 1 || ret2 != 1)
-        {
-        //    printf("read error ret = %d\n",ret);
-            printf("read file over !\n");
-            break;
+        if(fread(pat,184,1,fp_sourcefile) != 1) {
+        	printf("read inputfile data error !\n");
+        	break;
         }
 
     //    printf("0x%x 0x%x 0x%x 0x%x  \n",buf[0],buf[1],buf[2],buf[3]);
-
-
-
-
-        //printf("PID                                    \t### %d\n", packet_head->PID);
+//        printf("PID                                    \t### %d\n", packet_head->PID);
 //        if(packet_head->PID == 1024)
 //          printf("i = %d\n",i+1);
 //        printf("payload_unit_start_indicator \t\t### %x\n", packet_head->payload_unit_start_indicator);
@@ -111,11 +104,11 @@ int main(int argc,char * argv[])
         //如果这个包的pid是0 可以通过pat表查找出pmt表的pid
         if(packet_head->PID  == 0)
         {
-            adjust_PAT_table(packet_pat,pat);
+            adjust_PAT_table(packet_head,packet_pat,pat);
         }
         else if(packet_head->PID  == packet_pat->program_map_PID)
         {
-            adjust_PMT_table(packet_pmt,pat);
+            adjust_PMT_table(packet_head,packet_pmt,pat);
         }
         else if(packet_head->PID == ptsdemux->video_pid)
         {
