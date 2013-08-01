@@ -1,6 +1,6 @@
 /*
 
-  Copyright (C) 2013 xubinbin Ðì±ò±ò (Beijing China)
+  Copyright (C) 2013 xubinbin ï¿½ï¿½ï¿½ï¿½ (Beijing China)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -271,8 +271,8 @@ typedef struct TS_adaptation_field
     extern tsdemux_struc *ptsdemux;
 
 	void adjust_TS_packet_header(TS_packet_header* pheader,char * buf_header);
-	void adjust_PAT_table ( TS_PAT * packet, char * buffer );
-	void adjust_PMT_table ( TS_PMT * packet, char * buffer );
+	void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet, char * buffer );
+	void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet, char * buffer );
 	void adjust_video_table (TS_packet_header *packet_head,char * buffer,FILE *fb);
 	void adjust_audio_table (TS_packet_header *packet_head,char * buffer );
 	void printf_TS_packet_header_info(TS_packet_header *packet_head);
