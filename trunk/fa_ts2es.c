@@ -17,8 +17,8 @@
 
   
   filename: fa_ts2es.c
-  version : v1.0.0
-  time    : 2013/07/31 16:37 
+  version : v1.1.0
+  time    : 2013/08/02 16:20 
   author  : xubinbin ( xubbwd@gmail.com )
   code URL: http://code.google.com/p/tsdemux/
   
@@ -193,13 +193,15 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
 {
     int length_flag = 0;
     TS_PES packet_pes;
+//    unsigned char test = 0;
 
+//    printf("data packet_head->adaption_field_control = %d\n",packet_head->adaption_field_control);
     if(packet_head->adaption_field_control == 2||packet_head->adaption_field_control == 3)
     {
     //    adaptation_field()
         //调整字段的处理
         TS_adaptation_field adaptation_field;
-        adaptation_field.adaptation_field_length                = buffer[0];
+        adaptation_field.adaptation_field_length                = buffer[0] & 0xFF;
         adaptation_field.discontinuity_indicator                = buffer[1] >> 7 & 0x01;
         adaptation_field.random_access_indicator                = buffer[1] >> 6 & 0x01;
         adaptation_field.elementary_stream_priority_indicator   = buffer[1] >> 5 & 0x01;
@@ -209,6 +211,8 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         adaptation_field.transport_private_data_flag            = buffer[1] >> 1 & 0x01;
         adaptation_field.adaptation_field_extension_flag        = buffer[1] >> 0 & 0x01;
         length_flag = adaptation_field.adaptation_field_length+1;
+//        printf("adaptation_field.adaptation_field_length = %d\n",adaptation_field.adaptation_field_length);
+//        printf("length_flag = %d\n",length_flag);
         if(adaptation_field.PCR_flag == 1)
         {
         //    printf("line = %d\n",__LINE__);
@@ -216,19 +220,19 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         }
         if(adaptation_field.OPCR_flag == 1)
         {
-            printf("line = %d\n",__LINE__);
+//            printf("line = %d\n",__LINE__);
         }
         if(adaptation_field.splicing_point_flag == 1)
         {
-            printf("line = %d\n",__LINE__);
+//            printf("line = %d\n",__LINE__);
         }
         if(adaptation_field.transport_private_data_flag == 1)
         {
-            printf("line = %d\n",__LINE__);
+//            printf("line = %d\n",__LINE__);
         }
         if(adaptation_field.adaptation_field_extension_flag == 1)
         {
-            printf("line = %d\n",__LINE__);
+//            printf("line = %d\n",__LINE__);
         }
         //stuffing_byte 1byte
     }
@@ -252,8 +256,8 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         if(packet_pes.packet_start_code_prefix != 1)
             printf("packet_pes.packet_start_code_prefix 00 00 01 error !\n");
 
-        packet_pes.stream_id         = buffer[length_flag +3];
-        packet_pes.PES_packet_length = ( buffer[length_flag +4] << 8 | buffer[length_flag +5] ) & 0xffff;
+        packet_pes.stream_id         = buffer[length_flag +3] & 0xFF;
+        packet_pes.PES_packet_length = ( (buffer[length_flag +4] &0xFF) << 8 | (buffer[length_flag +5]&0xFF) ) & 0xffff;
 
     //    printf("packet_pes.stream_id = 0x%x\n",packet_pes.stream_id);
     //    printf("packet_pes.PES_packet_length = %d\n",packet_pes.PES_packet_length);
@@ -283,11 +287,22 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         printf("packet_pes.PES_extension_flag = %d\n",packet_pes.PES_extension_flag);
         #endif
 
+        length_flag +=9;
+//        printf("packet_pes.PTS_DTS_flags = %d\n",packet_pes.PTS_DTS_flags);
         if(packet_pes.PTS_DTS_flags == 0x02)
         {
-            packet_pes.PTS_32_30 = buffer[length_flag +9] >> 1 & 0x07;
-            packet_pes.PTS_29_15 = buffer[length_flag +10] >> 1 & 0x7F;
-            packet_pes.PTS_14_0  = buffer[length_flag +11] >> 1 & 0x7F;
+            packet_pes.PTS_32_30 = buffer[length_flag] >> 1 & 0x07;
+            packet_pes.PTS_29_15 = buffer[length_flag +1] >> 1 & 0x7F;
+            packet_pes.PTS_14_0  = buffer[length_flag +2] >> 1 & 0x7F;
+            length_flag += 5;
+        }
+        else if(packet_pes.PTS_DTS_flags == 0x03)
+        {
+            packet_pes.PTS_32_30 = buffer[length_flag] >> 1 & 0x07;
+            packet_pes.PTS_29_15 = buffer[length_flag +1] >> 1 & 0x7F;
+            packet_pes.PTS_14_0  = buffer[length_flag +2] >> 1 & 0x7F;
+            //check table for analysis
+            length_flag += 10;
         }
 
     //    printf("buffer[length_flag +12] = 0x%x\n",buffer[length_flag +12]);
@@ -299,11 +314,8 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         //    data_byte                 //8
             //有效负载的剩余部分，可能为PES分组，PSI，或一些自定义的数据。
         }
-        fwrite(&buffer[length_flag +14],184-length_flag-14,1,fb);
-
+        fwrite(&buffer[length_flag],184-length_flag,1,fb);
     }
-
-
 }
 
 

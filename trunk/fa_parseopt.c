@@ -17,8 +17,8 @@
 
   
   filename: fa_parseopt.c 
-  version : v1.0.0
-  time    : 2013/07/31 16:37 
+  version : v1.1.0
+  time    : 2013/08/02 16:20 
   author  : xubinbin ( xubbwd@gmail.com )
   code URL: http://code.google.com/p/tsdemux/
 
@@ -103,7 +103,7 @@ const char *license =
 "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n"
 "\n"
 "\n"
-"                                       ---xubinbin 2012.07.08"
+"                                       ---xubinbin 2012.08.02"
 "\n";
 
 static void fa_printopt()
