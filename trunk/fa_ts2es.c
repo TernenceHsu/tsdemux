@@ -29,7 +29,7 @@
 tsdemux_struc *ptsdemux = NULL;
 
 // Adjust TS packet header
-void adjust_TS_packet_header(TS_packet_header* pheader,char * buf_header)
+void adjust_TS_packet_header(TS_packet_header* pheader,unsigned char * buf_header)
 {
     if(buf_header[0] != 0x47)
     {
@@ -47,7 +47,7 @@ void adjust_TS_packet_header(TS_packet_header* pheader,char * buf_header)
 
 
 // Adjust PAT table
-void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet, char * buffer )
+void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet,unsigned char * buffer )
 {
     int n = 0, i = 0;
     int len = 0;
@@ -118,7 +118,7 @@ void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet, char * buffer
 
 
 // Adjust PMT table
-void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet, char * buffer )
+void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet,unsigned char * buffer )
 {
     int pos = 12, len = 0;
     int i = 0;
@@ -189,7 +189,7 @@ void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet, char * buffe
     }
 }
 
-void adjust_video_table (TS_packet_header *packet_head,char * buffer,FILE *fb)
+void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FILE *fb)
 {
     int length_flag = 0;
     TS_PES packet_pes;
@@ -238,7 +238,7 @@ void adjust_video_table (TS_packet_header *packet_head,char * buffer,FILE *fb)
         if(packet_head->payload_unit_start_indicator == 0)
         {
             fwrite(buffer+length_flag,184-length_flag,1,fb);
-            return 0;
+            return ;
         }
 
     //    printf("buffer[length_flag +0] = 0x%x\n",buffer[length_flag +0]);
@@ -307,7 +307,7 @@ void adjust_video_table (TS_packet_header *packet_head,char * buffer,FILE *fb)
 }
 
 
-void adjust_audio_table (TS_packet_header *packet_head,char * buffer )
+void adjust_audio_table (TS_packet_header *packet_head,unsigned char * buffer )
 {
 
 
