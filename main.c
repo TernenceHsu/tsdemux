@@ -29,12 +29,10 @@
 
 int main(int argc,char * argv[])
 {
-	int ret1 = 0,ret2 = 0;
+
     int ret = 0;
-	int i = 0;
 
 	unsigned char buffer_ts_header[4];
-	unsigned char packet[0x24b8];
 	unsigned char pat[184];
 
 	FILE * fp_sourcefile = NULL;
@@ -67,31 +65,33 @@ int main(int argc,char * argv[])
 //ts的头的搜索
 
 	ptsdemux = (tsdemux_struc *)malloc(sizeof(tsdemux_struc));
-	if (NULL == ptsdemux)
-	{
-		printf("malloc memory err!\n");
-		return NULL;
-	}
-	memset(ptsdemux, 0, sizeof(struct tsdemux_struc));
-	
-	ptsdemux->audio_pid=-1; /* disable all pids at start */
-	ptsdemux->video_pid=-1;
-    
     TS_packet_header *packet_head = malloc(sizeof(TS_packet_header));
     TS_PAT * packet_pat =  malloc(sizeof(TS_PAT));
     TS_PMT * packet_pmt =  malloc(sizeof(TS_PMT));
+	if (NULL == ptsdemux || packet_head == NULL || packet_pat == NULL || packet_pmt == NULL)
+	{
+		printf("malloc memory err!\n");
+		return -1;
+	}
+	memset(ptsdemux, 0, sizeof(struct tsdemux_struc));
+	memset(packet_head, 0, sizeof(struct _TS_packet_header));
+	memset(packet_pat, 0, sizeof(struct TS_PAT));
+	memset(packet_pmt, 0, sizeof(struct TS_PMT));
+	
+	ptsdemux->audio_pid=-1; /* disable all pids at start */
+	ptsdemux->video_pid=-1;
 
 //    for(i = 0;i < 3;i++)
     while(1)
     {
         if(fread(buffer_ts_header,4,1,fp_sourcefile) != 1) {
-        	printf("read inputfile ts_head error !\n");
+        //	printf("read inputfile ts_head error !\n");
         	break;
         }
-        adjust_TS_packet_header(packet_head,buffer_ts_header);
+        adjust_TS_packet_header((TS_packet_header *)packet_head,buffer_ts_header);
 
         if(fread(pat,184,1,fp_sourcefile) != 1) {
-        	printf("read inputfile data error !\n");
+        //	printf("read inputfile data error !\n");
         	break;
         }
 
@@ -114,7 +114,9 @@ int main(int argc,char * argv[])
         {
         //    printf("V ");
         //    printf_TS_packet_header_info(packet_head);
-            adjust_video_table(packet_head,pat,fp_video_destfile);
+        	if(strlen(opt_video_outputfile) > 0) {
+        		adjust_video_table(packet_head,pat,fp_video_destfile);
+        	}
         }
         else if(packet_head->PID == ptsdemux->audio_pid)
         {
@@ -122,7 +124,9 @@ int main(int argc,char * argv[])
     //        printf_TS_packet_header_info(packet_head);
     //        packet_head->adaption_field_control = 1;
     //        packet_head->payload_unit_start_indicator = 0;
-            adjust_video_table(packet_head,pat,fp_audio_destfile);
+        	if(strlen(opt_audio_outputfile) > 0) {
+        		adjust_video_table(packet_head,pat,fp_audio_destfile);
+        	}
         }
         else
         {
@@ -131,8 +135,12 @@ int main(int argc,char * argv[])
     }
 
     fclose(fp_sourcefile);
-    fclose(fp_video_destfile);
-    fclose(fp_audio_destfile);
+    if(strlen(opt_video_outputfile) > 0) {
+    	fclose(fp_video_destfile);
+    }
+    if(strlen(opt_audio_outputfile) > 0) {
+        fclose(fp_audio_destfile);
+    }
 
     printf("Done.\n");
 

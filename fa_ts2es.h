@@ -121,15 +121,15 @@ typedef struct TS_PES
 
 } TS_PES;
 
-typedef struct TimestampStorage {
+typedef struct _TimestampStorage {
 	int have_timestamp;
 	unsigned long long timestamp;
-};
+}TimestampStorage;
 
 
 typedef struct tsdemux_struc
 {
-	struct TimestampStorage audio_pts;
+	TimestampStorage audio_pts;
 	int audio_pid, video_pid, pcr_pid;
 	
 	int current_program; /* program we are currently decoding, -1 means no special program */
@@ -270,11 +270,11 @@ typedef struct TS_adaptation_field
 
     extern tsdemux_struc *ptsdemux;
 
-	void adjust_TS_packet_header(TS_packet_header* pheader,char * buf_header);
-	void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet, char * buffer );
-	void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet, char * buffer );
-	void adjust_video_table (TS_packet_header *packet_head,char * buffer,FILE *fb);
-	void adjust_audio_table (TS_packet_header *packet_head,char * buffer );
+	void adjust_TS_packet_header(TS_packet_header* pheader,unsigned char * buf_header);
+	void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet,unsigned char * buffer );
+	void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet,unsigned  char * buffer );
+	void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FILE *fb);
+	void adjust_audio_table (TS_packet_header *packet_head,unsigned char * buffer );
 	void printf_TS_packet_header_info(TS_packet_header *packet_head);
 
 
