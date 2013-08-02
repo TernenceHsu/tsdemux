@@ -1,6 +1,6 @@
 /*
 
-  Copyright (C) 2013 xubinbin ���� (Beijing China)
+  Copyright (C) 2013 xubinbin 徐彬彬 (Beijing China)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 
   
   filename: fa_ts2es.h 
-  version : v1.0.0
-  time    : 2013/07/31 16:37 
+  version : v1.1.0
+  time    : 2013/08/02 16:20 
   author  : xubinbin ( xubbwd@gmail.com )
   code URL: http://code.google.com/p/tsdemux/
   

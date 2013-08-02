@@ -1,0 +1,81 @@
+#
+#  Copyright (C) 2013 xubinbin Ðì±ò±ò (Beijing China)
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#  
+#  filename: Makefile.include
+#  version : v1.1.0
+#  time    : 2013/08/02 16:06 
+#  author  : xubinbin ( xubbwd@gmail.com )
+#  code URL: http://code.google.com/p/tsdemux/
+#  
+
+
+
+Summary:
+========
+
+This directory contains the source code for tsdemux.
+TS is the abbreviation of "Transport Stream".He is send the subcontractor,
+each package is 188 bytes long. In the TS stream can fill in the data of 
+many types, such as video, audio, custom information, etc. His package 
+structure, baotou is 4 bytes, the load of 184 bytes (the 184 bytes are 
+not necessarily valid data, there are some possible to populate the data).
+Main reference VLC software parsing and ISO/IEC 13818-1 standard.
+
+TS stream can composite a lot of video and audio programs, but the decoder
+is how to distinguish? The answer lies in PMT list, as its name shows
+the mapping table. He is to solve the problem. Now to see the stream_type
+in the PMT structure, elementary_PID these two elements, one used to 
+determine the latter as the logo before what is the content of the PID, 
+audio or video, etc. And note they are not only one, so they is read 
+by cycle to ensure that all the values are read, cycle, of course, 
+there are provisions (specific see adjustment function).
+
+
+
+Where to get help:
+==================
+
+In case you have questions about, problems with or contributions for
+tsdemux you should send a message to mailing at <xubbwd@gmail.com>.
+
+
+
+Where to get source code:
+=========================
+
+The tsdemux source code is maintained in the svn repository at
+https://tsdemux.googlecode.com/svn ;you can browse it online at
+https://code.google.com/p/tsdemux/source/browse/
+
+Command-line access
+Use this command to anonymously check out the latest project source code:
+# Non-members may check out a read-only working copy anonymously over HTTP.
+svn checkout http://tsdemux.googlecode.com/svn/trunk/ tsdemux-read-only
+
+
+
+Versioning:
+===========
+
+Functionality, the H264 and aac encoding of ts stream parsing 
+for H264 and aac ES data flow;
+
+Commonly used ts stream can be normal, VLC transcoding can 
+be parsed, currently only support H264 and parsing of aac.
+
+Thus the first official version.
+   

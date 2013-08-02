@@ -17,8 +17,8 @@
 
   
   filename: main.c 
-  version : v1.0.0
-  time    : 2013/07/31 16:37 
+  version : v1.1.0
+  time    : 2013/08/02 16:20 
   author  : xubinbin ( xubbwd@gmail.com )
   code URL: http://code.google.com/p/tsdemux/
 
@@ -81,7 +81,8 @@ int main(int argc,char * argv[])
 	ptsdemux->audio_pid=-1; /* disable all pids at start */
 	ptsdemux->video_pid=-1;
 
-//    for(i = 0;i < 3;i++)
+//	int i = 0;
+//    for(i = 0;i < 4;i++)
     while(1)
     {
         if(fread(buffer_ts_header,4,1,fp_sourcefile) != 1) {
