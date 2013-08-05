@@ -27,22 +27,24 @@
 Summary:
 ========
 
-This directory contains the source code for tsdemux.
-TS is the abbreviation of "Transport Stream".He is send the subcontractor,
-each package is 188 bytes long. In the TS stream can fill in the data of 
-many types, such as video, audio, custom information, etc. His package 
-structure, baotou is 4 bytes, the load of 184 bytes (the 184 bytes are 
-not necessarily valid data, there are some possible to populate the data).
-Main reference VLC software parsing and ISO/IEC 13818-1 standard.
 
-TS stream can composite a lot of video and audio programs, but the decoder
-is how to distinguish? The answer lies in PMT list, as its name shows
-the mapping table. He is to solve the problem. Now to see the stream_type
-in the PMT structure, elementary_PID these two elements, one used to 
-determine the latter as the logo before what is the content of the PID, 
-audio or video, etc. And note they are not only one, so they is read 
-by cycle to ensure that all the values are read, cycle, of course, 
-there are provisions (specific see adjustment function).
+This directory contains the source code of tsdemux.
+TS is the abbreviation of "Transport Stream". TS is a subcontractor,
+each package has 188 bytes . The TS stream can contains many types 
+of data, such as video, audio, custom information and so on .
+The header of a date frame has 4 bytes, and the load contains 184 bytes
+(the 184 bytes are  not always  effective, there may exist some data
+that are replaced by other words).The code of tsdemux is written by 
+referring VLC software standards . The protocol document is written 
+according to the ISO/IEC 13818-1.
+
+TS stream can composite a lot of video and audio programs, but how  
+the decoder to distinguish them ? The key of the problem is  PMT  
+data list--the Program Map Table. Fristly ,The  value of  PID  and 
+its  flow  type can  be acquired through  PMT data list.
+then parsing the code by getting a frame of date circularly ,
+Lastly Extracting the valid data to synthesis of an audio or 
+video data stream.
 
 
 
