@@ -194,6 +194,22 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
     int length_flag = 0;
     TS_PES packet_pes;
 //    unsigned char test = 0;
+#if 0   //get pts
+    unsigned int dts = 0;
+    static unsigned int dts_old = 0;
+    static int fb_v = 0;
+    static int times = 0;
+    static int times2 = 0;
+    static int times_frame = 0;
+    static int test = 0;
+    test++;
+    if(test == 4)
+    {
+        fb_v = fb;
+        test ++;
+    }
+#endif
+    
 
 //    printf("data packet_head->adaption_field_control = %d\n",packet_head->adaption_field_control);
     if(packet_head->adaption_field_control == 2||packet_head->adaption_field_control == 3)
@@ -267,7 +283,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         packet_pes.data_alignment_indicator = buffer[length_flag +6] >> 2 & 0x01;
         packet_pes.copyright                = buffer[length_flag +6] >> 1 & 0x01;
         packet_pes.original_or_copy         = buffer[length_flag +6] >> 0 & 0x01;
-        //应当只有DTS信息
+        //can get pts and dts info
         packet_pes.PTS_DTS_flags                = buffer[length_flag +7] >> 6 & 0x03;
         packet_pes.ESCR_flag                    = buffer[length_flag +7] >> 5 & 0x01;
         packet_pes.ES_rate_flag                 = buffer[length_flag +7] >> 4 & 0x01;
@@ -277,6 +293,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         packet_pes.PES_extension_flag           = buffer[length_flag +7] >> 0 & 0x01;
 
         packet_pes.PES_header_data_length           = buffer[length_flag +8];
+        
         #if 0
         printf("packet_pes.PTS_DTS_flags = %d\n",packet_pes.PTS_DTS_flags);
         printf("packet_pes.ESCR_flag = %d\n",packet_pes.ESCR_flag);
@@ -289,21 +306,53 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
 
         length_flag +=9;
 //        printf("packet_pes.PTS_DTS_flags = %d\n",packet_pes.PTS_DTS_flags);
+        
         if(packet_pes.PTS_DTS_flags == 0x02)
         {
-            packet_pes.PTS_32_30 = buffer[length_flag] >> 1 & 0x07;
-            packet_pes.PTS_29_15 = buffer[length_flag +1] >> 1 & 0x7F;
-            packet_pes.PTS_14_0  = buffer[length_flag +2] >> 1 & 0x7F;
+            packet_pes.PTS_32_30 = ( buffer[length_flag] >> 1 ) & 0x07;
+            packet_pes.PTS_29_15 = ((buffer[length_flag +1] << 7) | (buffer[length_flag +2] >> 1)) & 0x7FFF;
+            packet_pes.PTS_14_0  = ((buffer[length_flag +3] << 7) | (buffer[length_flag +4] >> 1)) & 0x7FFF;
             length_flag += 5;
+            #if 0
+            if(fb_v == fb)
+            {
+                dts = packet_pes.PTS_32_30 << 30 | packet_pes.PTS_29_15 << 15 | packet_pes.PTS_14_0;
+                dts /= 90;
+                if(dts_old != dts)
+                {
+                    times_frame++;
+                    times2 = 0;
+                    dts_old = dts;
+                }
+                printf("fb = %x  # %d   ## %d ## %d dts = %d\n",fb,times++,times_frame,++times2,dts);
+            }
+            #endif
+            
         }
         else if(packet_pes.PTS_DTS_flags == 0x03)
         {
-            packet_pes.PTS_32_30 = buffer[length_flag] >> 1 & 0x07;
-            packet_pes.PTS_29_15 = buffer[length_flag +1] >> 1 & 0x7F;
-            packet_pes.PTS_14_0  = buffer[length_flag +2] >> 1 & 0x7F;
+            packet_pes.PTS_32_30 = ( buffer[length_flag] >> 1 ) & 0x07;
+            packet_pes.PTS_29_15 = ((buffer[length_flag +1] << 7) | (buffer[length_flag +2] >> 1)) & 0x7FFF;
+            packet_pes.PTS_14_0  = ((buffer[length_flag +3] << 7) | (buffer[length_flag +4] >> 1)) & 0x7FFF;
             //check table for analysis
             length_flag += 10;
+            #if 0
+            if(fb_v == fb)
+            {
+                dts = packet_pes.PTS_32_30 << 30 | packet_pes.PTS_29_15 << 15 | packet_pes.PTS_14_0;
+                dts /= 90;
+                if(dts_old != dts)
+                {
+                    times_frame++;
+                    times2 = 0;
+                    printf("△time = *%d*\n",dts-dts_old);
+                    dts_old = dts;
+                }
+                printf("fb = %x  # %d   ## %d ## %d dts = %d\n",fb,times++,times_frame,++times2,dts);
+            }
+            #endif
         }
+
 
     //    printf("buffer[length_flag +12] = 0x%x\n",buffer[length_flag +12]);
     //    printf("buffer[length_flag +13] = 0x%x\n",buffer[length_flag +13]);
@@ -328,6 +377,7 @@ void adjust_audio_table (TS_packet_header *packet_head,unsigned char * buffer )
 
 void printf_TS_packet_header_info(TS_packet_header *packet_head)
 {
+
     printf("\n###########################################\n");
     printf("TS header info:\n");
     printf("sync_byte                           \t### %x\n", packet_head->sync_byte);
