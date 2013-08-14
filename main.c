@@ -82,7 +82,7 @@ int main(int argc,char * argv[])
 	ptsdemux->video_pid=-1;
 
 //	int i = 0;
-//    for(i = 0;i < 4;i++)
+//    for(i = 0;i < 6;i++)
     while(1)
     {
         if(fread(buffer_ts_header,4,1,fp_sourcefile) != 1) {
@@ -96,7 +96,7 @@ int main(int argc,char * argv[])
         	break;
         }
 
-    //    printf("0x%x 0x%x 0x%x 0x%x  \n",buf[0],buf[1],buf[2],buf[3]);
+//        printf("0x%x 0x%x 0x%x 0x%x  \n",buffer_ts_header[0],buffer_ts_header[1],buffer_ts_header[2],buffer_ts_header[3]);
 //        printf("PID                                    \t### %d\n", packet_head->PID);
 //        if(packet_head->PID == 1024)
 //          printf("i = %d\n",i+1);
