@@ -1,6 +1,4 @@
-#summary One-sentence summary of this page.
 #labels tsdemux
-
 This directory contains the source code of tsdemux.
 TS is the abbreviation of "Transport Stream". TS is a subcontractor,
 each package has 188 bytes . The TS stream can contains many types 
@@ -19,14 +17,13 @@ then parsing the code by getting a frame of date circularly ,
 Lastly Extracting the valid data to synthesis of an audio or 
 video data stream.
 
-= Introduction =
+Versioning:
+===========
 
-Add your content here.
+Functionality, the H264 and aac encoding of ts stream parsing 
+for H264 and aac ES data flow;
 
+Commonly used ts stream can be normal, VLC transcoding can 
+be parsed, currently only support H264 and parsing of aac.
 
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Thus the first official version.
