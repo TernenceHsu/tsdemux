@@ -1,6 +1,6 @@
-﻿/*
+/*
 
-  Copyright (C) 2013 xubinbin 徐彬彬 (Beijing China)
+  Copyright (C) 2013 xubinbin ���� (Beijing China)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 
   
   filename: main.c 
-  version : v1.1.0
-  time    : 2013/08/02 16:20 
-  author  : xubinbin ( xubbwd@gmail.com )
+  version : v1.2.0
+  time    : 2015/07/01 16:20 
+  author  : xubinbin ( ternence.hsu@foxmail.com )
   code URL: http://code.google.com/p/tsdemux/
 
 */
@@ -27,17 +27,98 @@
 #include "fa_parseopt.h"
 #include "fa_ts2es.h"
 
+#define READ_TS_SIZE (188*7)
+
+tsdemux_struc ptsdemux;
+
+FILE * fp_video_destfile = NULL;
+FILE * fp_audio_destfile = NULL;
+
+int tsdemux_init(tsdemux_struc *ptsdemux)
+{	
+	memset(ptsdemux, 0, sizeof(struct tsdemux_struc));
+
+	ptsdemux->audio_pid=-1; /* disable all pids at start */
+	ptsdemux->video_pid=-1;
+
+	return 0;
+}
+
+int tsdemux_deinit(tsdemux_struc *ptsdemux)
+{
+	memset(ptsdemux, 0, sizeof(struct tsdemux_struc));
+	ptsdemux->channel_id = -1;
+	
+	return 0;
+}
+
+
+int tsdemux_process(tsdemux_struc *ptsdemux,char * ts_buf,int buf_size)
+{
+	int curcos = 0;
+	
+    if(buf_size%188 != 0)
+    {
+        printf("tsdemux receive buffer size error ! \n");
+        exit(0);
+    }
+    if(ts_buf[0] != 0x47)
+    {
+        printf("tsdemux receive buffer is not a ts standard data \n");
+        exit(0);
+    }
+
+	unsigned char buffer_ts_header[4];
+	unsigned char pat[184];
+
+	while(curcos != buf_size)
+	{
+		
+		memcpy(buffer_ts_header,ts_buf+curcos,4);
+        curcos += 4;
+		
+        adjust_TS_packet_header(&(ptsdemux->packet_head),buffer_ts_header);
+		
+        memcpy(pat,ts_buf+curcos,184);
+        curcos += 184;
+
+        //����������pid��0 ����ͨ��pat�����ҳ�pmt����pid
+        if(ptsdemux->packet_head.PID  == 0)
+        {
+            adjust_PAT_table(&ptsdemux->packet_head,&ptsdemux->packet_pat,pat);
+        }
+        else if(ptsdemux->packet_head.PID  == ptsdemux->packet_pat.program_map_PID)
+        {
+            adjust_PMT_table(&ptsdemux->packet_head,&ptsdemux->packet_pmt,pat);
+        }
+        else if(ptsdemux->packet_head.PID == ptsdemux->video_pid)
+        {
+        	if(strlen(opt_video_outputfile) > 0) {
+        		adjust_video_table(&ptsdemux->packet_head,pat,fp_video_destfile);
+        	}
+        }
+        else if(ptsdemux->packet_head.PID == ptsdemux->audio_pid)
+        {
+        	if(strlen(opt_audio_outputfile) > 0) {
+        		adjust_video_table(&ptsdemux->packet_head,pat,fp_audio_destfile);
+        	}
+        }
+        else
+        {
+            printf("error pid\n");
+        }
+    }
+	return 0;
+}
+
 int main(int argc,char * argv[])
 {
 
     int ret = 0;
 
-	unsigned char buffer_ts_header[4];
-	unsigned char pat[184];
-
+	char ts_buffer[READ_TS_SIZE];
+	
 	FILE * fp_sourcefile = NULL;
-	FILE * fp_video_destfile = NULL;
-	FILE * fp_audio_destfile = NULL;
 
     ret = fa_parseopt(argc, argv);
     if(ret) return -1;
@@ -59,81 +140,18 @@ int main(int argc,char * argv[])
 		}
 	}
 
-//前面这里最好是写一个包数据的循环处理包出来
-//循环读一个数据包，循环对包的PID进行判断
+	tsdemux_init(&ptsdemux);
 
-//ts的头的搜索
-
-	ptsdemux = (tsdemux_struc *)malloc(sizeof(tsdemux_struc));
-    TS_packet_header *packet_head = malloc(sizeof(TS_packet_header));
-    TS_PAT * packet_pat =  malloc(sizeof(TS_PAT));
-    TS_PMT * packet_pmt =  malloc(sizeof(TS_PMT));
-	if (NULL == ptsdemux || packet_head == NULL || packet_pat == NULL || packet_pmt == NULL)
-	{
-		printf("malloc memory err!\n");
-		return -1;
-	}
-	memset(ptsdemux, 0, sizeof(struct tsdemux_struc));
-	memset(packet_head, 0, sizeof(struct _TS_packet_header));
-	memset(packet_pat, 0, sizeof(struct TS_PAT));
-	memset(packet_pmt, 0, sizeof(struct TS_PMT));
-	
-	ptsdemux->audio_pid=-1; /* disable all pids at start */
-	ptsdemux->video_pid=-1;
-
-//	int i = 0;
-//    for(i = 0;i < 6;i++)
     while(1)
     {
-        if(fread(buffer_ts_header,4,1,fp_sourcefile) != 1) {
-        //	printf("read inputfile ts_head error !\n");
+		if(fread(ts_buffer,READ_TS_SIZE,1,fp_sourcefile) != 1) {
+        		printf("read inputfile ts_head over/error !\n");
         	break;
         }
-        adjust_TS_packet_header((TS_packet_header *)packet_head,buffer_ts_header);
-
-        if(fread(pat,184,1,fp_sourcefile) != 1) {
-        //	printf("read inputfile data error !\n");
-        	break;
-        }
-
-//        printf("0x%x 0x%x 0x%x 0x%x  \n",buffer_ts_header[0],buffer_ts_header[1],buffer_ts_header[2],buffer_ts_header[3]);
-//        printf("PID                                    \t### %d\n", packet_head->PID);
-//        if(packet_head->PID == 1024)
-//          printf("i = %d\n",i+1);
-//        printf("payload_unit_start_indicator \t\t### %x\n", packet_head->payload_unit_start_indicator);
-
-        //如果这个包的pid是0 可以通过pat表查找出pmt表的pid
-        if(packet_head->PID  == 0)
-        {
-            adjust_PAT_table(packet_head,packet_pat,pat);
-        }
-        else if(packet_head->PID  == packet_pat->program_map_PID)
-        {
-            adjust_PMT_table(packet_head,packet_pmt,pat);
-        }
-        else if(packet_head->PID == ptsdemux->video_pid)
-        {
-        //    printf("V ");
-        //    printf_TS_packet_header_info(packet_head);
-        	if(strlen(opt_video_outputfile) > 0) {
-        		adjust_video_table(packet_head,pat,fp_video_destfile);
-        	}
-        }
-        else if(packet_head->PID == ptsdemux->audio_pid)
-        {
-    //        printf("A");
-    //        printf_TS_packet_header_info(packet_head);
-    //        packet_head->adaption_field_control = 1;
-    //        packet_head->payload_unit_start_indicator = 0;
-        	if(strlen(opt_audio_outputfile) > 0) {
-        		adjust_video_table(packet_head,pat,fp_audio_destfile);
-        	}
-        }
-        else
-        {
-            printf("error pid\n");
-        }
-    }
+		tsdemux_process(&ptsdemux,ts_buffer,READ_TS_SIZE);
+	}
+    
+	tsdemux_deinit(&ptsdemux);
 
     fclose(fp_sourcefile);
     if(strlen(opt_video_outputfile) > 0) {

@@ -68,7 +68,7 @@ Use this command to anonymously check out the latest project source code:
 # Non-members may check out a read-only working copy anonymously over HTTP.
 svn checkout http://tsdemux.googlecode.com/svn/trunk/ tsdemux-read-only
 
-
+(All the document format to: ANSI format codes)
 
 Versioning:
 ===========
