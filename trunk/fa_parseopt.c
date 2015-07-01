@@ -46,9 +46,9 @@ char  opt_audio_outputfile[256] = "";
 
 const char *usage =
 "\n\n"
-"Usage: faresample <-i> <inputfile> <-v> <video_outputfile> [options] \n"
-"       faresample <-i> <inputfile> <-a> <audio_outputfile> [options] \n"
-"       faresample <-i> <inputfile> <-v> <video_outputfile> <-a> <audio_outputfile> [options] \n"
+"Usage: tsdemux <-i> <inputfile> <-v> <video_outputfile> [options] \n"
+"       tsdemux <-i> <inputfile> <-a> <audio_outputfile> [options] \n"
+"       tsdemux <-i> <inputfile> <-v> <video_outputfile> <-a> <audio_outputfile> [options] \n"
 "\n\n"
 "See also:\n"
 "    --help               for a description of all options for ...\n"

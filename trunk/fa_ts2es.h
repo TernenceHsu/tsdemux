@@ -1,6 +1,6 @@
 /*
 
-  Copyright (C) 2013 xubinbin ÂæêÂΩ¨ÂΩ¨ (Beijing China)
+  Copyright (C) 2013 xubinbin –Ï±Ú±Ú (Beijing China)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -129,6 +129,11 @@ typedef struct _TimestampStorage {
 
 typedef struct tsdemux_struc
 {
+	int channel_id;
+	TS_packet_header packet_head;
+	TS_PAT packet_pat;
+	TS_PMT packet_pmt;
+
 	TimestampStorage audio_pts;
 	int audio_pid, video_pid, pcr_pid;
 	
@@ -268,7 +273,7 @@ typedef struct TS_adaptation_field
 #endif
 
 
-    extern tsdemux_struc *ptsdemux;
+    extern tsdemux_struc ptsdemux;
 
 	void adjust_TS_packet_header(TS_packet_header* pheader,unsigned char * buf_header);
 	void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet,unsigned char * buffer );

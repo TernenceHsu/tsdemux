@@ -1,6 +1,6 @@
 /*
 
-  Copyright (C) 2013 xubinbin å¾å½¬å½¬ (Beijing China)
+  Copyright (C) 2013 xubinbin Ðì±ò±ò (Beijing China)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,8 +25,6 @@
 */
 
 #include "fa_ts2es.h"
-
-tsdemux_struc *ptsdemux = NULL;
 
 // Adjust TS packet header
 void adjust_TS_packet_header(TS_packet_header* pheader,unsigned char * buf_header)
@@ -91,7 +89,7 @@ void adjust_PAT_table ( TS_packet_header* pheader,TS_PAT * packet,unsigned char 
         //len = 3+ 1 + packet->section_length - 4;
         len += 8;
 
-        for ( i = 5,n = len; i < packet->section_length; n+=8,i+=8 )
+        for ( i = 0,n = len; i < (packet->section_length-8+3-4); n+=4,i+=4 )
         {
         //    printf("@@@@@@###############\n");
             packet->program_number            = (buffer[n] & 0xFF) << 8 | (buffer[n+1] & 0xFF);
@@ -176,9 +174,9 @@ void adjust_PMT_table ( TS_packet_header* pheader, TS_PMT * packet,unsigned char
             packet->ES_info_length                        = (buffer[pos+3] & 0x0F) << 8 | buffer[pos+4];
 
             if(packet->stream_type == 15)    //aac
-                ptsdemux->audio_pid = packet->elementary_PID;
+                ptsdemux.audio_pid = packet->elementary_PID;
             if(packet->stream_type == 27)    //h264
-                ptsdemux->video_pid = packet->elementary_PID;
+                ptsdemux.video_pid = packet->elementary_PID;
 
             if ( packet->ES_info_length != 0 )
             {
@@ -215,7 +213,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
     if(packet_head->adaption_field_control == 2||packet_head->adaption_field_control == 3)
     {
     //    adaptation_field()
-        //è°ƒæ•´å­—æ®µçš„å¤„ç†
+        //µ÷Õû×Ö¶ÎµÄ´¦Àí
         TS_adaptation_field adaptation_field;
         adaptation_field.adaptation_field_length                = buffer[0] & 0xFF;
         adaptation_field.discontinuity_indicator                = buffer[1] >> 7 & 0x01;
@@ -232,7 +230,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
         if(adaptation_field.PCR_flag == 1)
         {
         //    printf("line = %d\n",__LINE__);
-            //è·³è¿‡6å­—èŠ‚
+            //Ìø¹ý6×Ö½Ú
         }
         if(adaptation_field.OPCR_flag == 1)
         {
@@ -345,7 +343,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
                 {
                     times_frame++;
                     times2 = 0;
-                    printf("â–³time = *%d*\n",dts-dts_old);
+                    printf("¡÷time = *%d*\n",dts-dts_old);
                     dts_old = dts;
                 }
                 printf("fb = %x  # %d   ## %d ## %d dts = %d\n",fb,times++,times_frame,++times2,dts);
@@ -361,7 +359,7 @@ void adjust_video_table (TS_packet_header *packet_head,unsigned char * buffer,FI
      //   for  (i=0;i<N;i++)
         {
         //    data_byte                 //8
-            //æœ‰æ•ˆè´Ÿè½½çš„å‰©ä½™éƒ¨åˆ†ï¼Œå¯èƒ½ä¸ºPESåˆ†ç»„ï¼ŒPSIï¼Œæˆ–ä¸€äº›è‡ªå®šä¹‰çš„æ•°æ®ã€‚
+            //ÓÐÐ§¸ºÔØµÄÊ£Óà²¿·Ö£¬¿ÉÄÜÎªPES·Ö×é£¬PSI£¬»òÒ»Ð©×Ô¶¨ÒåµÄÊý¾Ý¡£
         }
         fwrite(&buffer[length_flag],184-length_flag,1,fb);
     }
