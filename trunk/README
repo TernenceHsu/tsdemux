@@ -16,9 +16,9 @@
 #
 #  
 #  filename: Makefile.include
-#  version : v1.1.0
-#  time    : 2013/08/02 16:06 
-#  author  : xubinbin ( xubbwd@gmail.com )
+#  version : v1.2.0
+#  time    : 2015/07/01 10:06 
+#  author  : xubinbin ( ternence.hsu@foxmail.com )
 #  code URL: http://code.google.com/p/tsdemux/
 #  
 
@@ -52,7 +52,7 @@ Where to get help:
 ==================
 
 In case you have questions about, problems with or contributions for
-tsdemux you should send a message to mailing at <xubbwd@gmail.com>.
+tsdemux you should send a message to mailing at <ternence.hsu@foxmail.com>.
 
 
 
@@ -80,4 +80,3 @@ Commonly used ts stream can be normal, VLC transcoding can
 be parsed, currently only support H264 and parsing of aac.
 
 Thus the first official version.
-   
